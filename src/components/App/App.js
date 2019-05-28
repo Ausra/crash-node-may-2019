@@ -1,41 +1,52 @@
-import React from 'react';
-import PropTypes from 'prop-types';
-import { translate } from 'react-i18next';
-import s from './App.scss';
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 
-/* <-- To remove demo stuff just copy-paste:
-  \{?/\*\s?<--([\n\n]|.)*?-->\s?\*\/\}?
-  to your search input with RegExp enabled and remove everything matched.
---> */
+function App() {
+  const [comments, setComments] = useState([]);
+  const [commentCount, setCommmentCount] = useState(0);
+  const [name, setName] = useState('');
+  const [comment, setComment] = useState('');
 
-class App extends React.Component {
-  static propTypes = {
-    t: PropTypes.func,
+  useEffect(() => {
+    const getComments = async () => {
+      const result = await axios.get('/comments');
+      setComments(result.data);
+    };
+    getComments();
+  }, [commentCount]);
+
+  const addComment = async () => {
+    await axios.post('/comments', { author: name, text: comment });
+    setCommmentCount(oldCommentCount => oldCommentCount + 1);
   };
 
-  /* <-- Feel free to remove this lifecycle hook */
-  /* <-- Please also remove `yoshi-template-intro` from your package.json */
-  state = {};
-  async componentDidMount() {
-    const { default: TemplateIntro } = await import('yoshi-template-intro');
-    this.setState({ TemplateIntro });
-  } /* --> */
-
-  render() {
-    const { t } = this.props;
-
-    return (
-      <div className={s.root}>
-        <h2 className={s.title} data-testid="app-title">
-          {t('app.title')}
-        </h2>
-        {/* <-- Feel free to remove TemplateIntro */}
-        {this.state.TemplateIntro &&
-          React.createElement(this.state.TemplateIntro)}
-        {/* --> */}
+  return (
+    <div>
+      <div id="comments-list" />
+      {comments.map(({ author, text }, index) => (
+        <div key={index} data-testid={index}>
+          {author}: {text}
+        </div>
+      ))}
+      <div>
+        <input
+          id="name"
+          type="text"
+          value={name}
+          onChange={e => setName(e.target.value)}
+        />
+        <input
+          id="comment"
+          type="text"
+          value={comment}
+          onChange={e => setComment(e.target.value)}
+        />
+        <button id="add-button" onClick={addComment}>
+          Add Comment
+        </button>
       </div>
-    );
-  }
+    </div>
+  );
 }
 
-export default translate()(App);
+export default App;

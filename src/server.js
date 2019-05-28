@@ -2,6 +2,7 @@ import wixExpressCsrf from '@wix/wix-express-csrf';
 import wixExpressRequireHttps from '@wix/wix-express-require-https';
 import { hot } from 'bootstrap-hot-loader';
 import { NodeWorkshopScalaApp } from '@wix/ambassador-node-workshop-scala-app/rpc';
+import bodyParser from 'body-parser';
 
 // This function is the main entry for our server. It accepts an express Router
 // (see http://expressjs.com) and attaches routes and middlewares to it.
@@ -19,7 +20,7 @@ export default hot(module, (app, context) => {
   // Require HTTPS by redirecting to HTTPS from HTTP. Only active in a production environment.
   // See https://github.com/wix-platform/wix-node-platform/tree/master/express/wix-express-require-https.
   app.use(wixExpressRequireHttps);
-
+  app.use(bodyParser.json());
   // Attach a rendering middleware, it adds the `renderView` method to every request.
   // See https://github.com/wix-private/fed-infra/tree/master/wix-bootstrap-renderer.
   app.use(context.renderer.middleware());
@@ -29,6 +30,14 @@ export default hot(module, (app, context) => {
       'eb6f81e2-4b03-4d6e-955f-a1b4abf6bbcf',
     );
     res.send(comments);
+  });
+
+  app.post('/comments', async (req, res) => {
+    await commentsService(req.aspects).add(
+      'eb6f81e2-4b03-4d6e-955f-a1b4abf6bbcf',
+      req.body,
+    );
+    res.end();
   });
   // Define a route to render our initial HTML.
   app.get('/', (req, res) => {
